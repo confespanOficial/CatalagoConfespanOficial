@@ -222,6 +222,8 @@ td.qty{width:150px;}
 }
 .field input:focus{outline:none;border-color:var(--green-500);}
 /* forma de pagamento */
+.pay-opt input:disabled + span{opacity:.45;cursor:not-allowed;border-color:transparent;}
+.pay-hint{font-size:12.5px;color:var(--green-900);margin-top:8px;line-height:1.5;}
 .pay{display:grid;grid-template-columns:1fr;gap:6px;}
 .pay-opt{display:block;cursor:pointer;margin:0;}
 .pay-opt input{position:absolute;opacity:0;pointer-events:none;}
@@ -333,12 +335,20 @@ td.qty{width:150px;}
   </div>
   <div class="slip-foot">
     <div class="field">
+      <label>É seu primeiro pedido com a Confespan?</label>
+      <div class="pay">
+        <label class="pay-opt"><input type="radio" name="first" value="sim"><span>Sim, sou cliente novo</span></label>
+        <label class="pay-opt"><input type="radio" name="first" value="nao"><span>Não, já sou cliente</span></label>
+      </div>
+    </div>
+    <div class="field">
       <label>Forma de pagamento</label>
       <div class="pay" id="payOptions">
         <label class="pay-opt"><input type="radio" name="pay" value="À vista no PIX"><span>À vista no PIX</span></label>
         <label class="pay-opt"><input type="radio" name="pay" value="7 dias no boleto"><span>7 dias no boleto</span></label>
         <label class="pay-opt"><input type="radio" name="pay" value="14 dias no boleto"><span>14 dias no boleto</span></label>
       </div>
+      <div class="pay-hint" id="payHint"></div>
     </div>
     <button class="send-btn" id="sendBtn" disabled>✆ Enviar pedido no WhatsApp</button>
     <div class="slip-note">Ao enviar, o WhatsApp abre com o pedido pronto para a Day. Nada é cobrado aqui — a confirmação é feita por ela.</div>
@@ -1490,6 +1500,24 @@ function getPayment(){
 }
 document.querySelectorAll('input[name="pay"]').forEach(r=>r.addEventListener('change', updateCartUI));
 
+// Cliente novo: primeiro pedido somente à vista; depois libera boleto 7 e 14 dias
+function getFirst(){
+  const el = document.querySelector('input[name="first"]:checked');
+  return el ? el.value : '';
+}
+function applyPayRules(){
+  const first = getFirst();
+  document.querySelectorAll('input[name="pay"]').forEach(r=>{
+    const boleto = r.value.includes('boleto');
+    r.disabled = !first || (first === 'sim' && boleto);
+    if(r.disabled) r.checked = false;
+  });
+  document.getElementById('payHint').textContent =
+    first === 'sim' ? 'O primeiro pedido é somente à vista. A partir do próximo, você pode pagar no boleto em 7 ou 14 dias.'
+    : first ? '' : 'Responda a pergunta acima para escolher o pagamento.';
+}
+document.querySelectorAll('input[name="first"]').forEach(r=>r.addEventListener('change', ()=>{ applyPayRules(); updateCartUI(); }));
+
 function findProduct(code){ return PRODUCTS.find(p=>p.c===Number(code)); }
 
 function updateCartUI(){
@@ -1561,6 +1589,7 @@ document.getElementById('sendBtn').addEventListener('click', ()=>{
   let msg = `Olá! Gostaria de fazer o seguinte pedido:\n\n`;
   msg += lines.join('\n');
   msg += `\n\nTotal: ${money(sum)}`;
+  if(getFirst() === 'sim') msg += `\nCliente novo (primeiro pedido)`;
   msg += `\nPagamento: ${getPayment()}`;
   const url = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(msg)}`;
   window.open(url, '_blank');
@@ -1580,6 +1609,7 @@ const _setQty = setQty;
 setQty = function(code, qty){ _setQty(code, qty); persist(); };
 
 renderList('');
+applyPayRules();
 updateCartUI();
 </script>
 </body>
