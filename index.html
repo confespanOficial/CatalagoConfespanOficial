@@ -394,6 +394,71 @@ tr.out-of-stock td.price{color:var(--muted);text-decoration:line-through;}
 .updater-status{padding:12px;border-radius:10px;background:var(--bg);font-size:13px;display:none;}
 .updater-status.show{display:block;}
 
+
+/* ===== Marcas Parceiras / Patrocinadores passando em faixa contínua ===== */
+.sponsors-box{
+  display:flex;flex-direction:column;align-items:flex-end;gap:8px;
+  padding-bottom:54px;width:min(460px,100%);min-width:0;
+}
+.sponsors-label{
+  font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
+  color:rgba(255,255,255,.72);
+}
+.sponsors-marquee{
+  width:100%;
+  overflow:hidden;
+  position:relative;
+  border-radius:999px;
+  padding:4px 0;
+  -webkit-mask-image:linear-gradient(90deg, transparent 0%, #000 10%, #000 90%, transparent 100%);
+  mask-image:linear-gradient(90deg, transparent 0%, #000 10%, #000 90%, transparent 100%);
+}
+.sponsors-track{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  width:max-content;
+  animation:sponsorsScroll 24s linear infinite;
+}
+.sponsors-marquee:hover .sponsors-track{
+  animation-play-state:paused;
+}
+@keyframes sponsorsScroll{
+  0%{transform:translateX(0);}
+  100%{transform:translateX(-50%);}
+}
+.sponsor-chip{
+  flex:none;
+  border:1px solid rgba(255,255,255,.24);
+  background:rgba(255,255,255,.14);
+  backdrop-filter:blur(6px);
+  color:#fff;
+  padding:6px 13px;
+  border-radius:999px;
+  font:700 12px var(--display);
+  letter-spacing:.03em;
+  cursor:pointer;
+  white-space:nowrap;
+  transition:background .15s,color .15s,border-color .15s,transform .15s;
+}
+.sponsor-chip:hover{
+  background:var(--gold);
+  color:var(--green-900);
+  border-color:var(--gold);
+  transform:translateY(-1px);
+}
+.sponsor-chip.active{
+  background:var(--gold);
+  color:var(--green-900);
+  border-color:var(--gold);
+  box-shadow:0 4px 12px rgba(0,0,0,.25);
+}
+@media (max-width:860px){
+  header.top{flex-direction:column;align-items:flex-start;gap:0;}
+  .brand > div{padding-bottom:16px;}
+  .sponsors-box{align-items:flex-start;padding-bottom:44px;width:100%;}
+}
+
 </style>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 </head>
@@ -406,6 +471,38 @@ tr.out-of-stock td.price{color:var(--muted);text-decoration:line-through;}
       <span class="mark">CONFESPAN</span>
       <h1>Catálogo de Pedidos</h1>
       <div class="sub">distribuidora de produtos alimentícios</div>
+    </div>
+  </div>
+  <div class="sponsors-box" aria-label="Marcas Parceiras">
+    <span class="sponsors-label">Marcas Parceiras · Passe o mouse para pausar ou clique para filtrar</span>
+    <div class="sponsors-marquee">
+      <div class="sponsors-track" id="sponsorsGrid">
+        <button type="button" class="sponsor-chip" data-brand="RICH'S">Rich's</button>
+        <button type="button" class="sponsor-chip" data-brand="HARALD">Harald</button>
+        <button type="button" class="sponsor-chip" data-brand="FLEISCHMANN">Fleischmann</button>
+        <button type="button" class="sponsor-chip" data-brand="BUNGE">Bunge</button>
+        <button type="button" class="sponsor-chip" data-brand="PURATOS">Puratos</button>
+        <button type="button" class="sponsor-chip" data-brand="ITAMBE">Itambé</button>
+        <button type="button" class="sponsor-chip" data-brand="MAVALERIO">Mavalério</button>
+        <button type="button" class="sponsor-chip" data-brand="SICAO">Sicao</button>
+        <button type="button" class="sponsor-chip" data-brand="MELKEN">Melken</button>
+        <button type="button" class="sponsor-chip" data-brand="ADIMIX">Adimix</button>
+        <button type="button" class="sponsor-chip" data-brand="FARINELLI">Farinelli</button>
+        <button type="button" class="sponsor-chip" data-brand="GALVANOTEK">Galvanotek</button>
+        <!-- duplicado para rolagem infinita sem corte -->
+        <button type="button" class="sponsor-chip" data-brand="RICH'S" tabindex="-1">Rich's</button>
+        <button type="button" class="sponsor-chip" data-brand="HARALD" tabindex="-1">Harald</button>
+        <button type="button" class="sponsor-chip" data-brand="FLEISCHMANN" tabindex="-1">Fleischmann</button>
+        <button type="button" class="sponsor-chip" data-brand="BUNGE" tabindex="-1">Bunge</button>
+        <button type="button" class="sponsor-chip" data-brand="PURATOS" tabindex="-1">Puratos</button>
+        <button type="button" class="sponsor-chip" data-brand="ITAMBE" tabindex="-1">Itambé</button>
+        <button type="button" class="sponsor-chip" data-brand="MAVALERIO" tabindex="-1">Mavalério</button>
+        <button type="button" class="sponsor-chip" data-brand="SICAO" tabindex="-1">Sicao</button>
+        <button type="button" class="sponsor-chip" data-brand="MELKEN" tabindex="-1">Melken</button>
+        <button type="button" class="sponsor-chip" data-brand="ADIMIX" tabindex="-1">Adimix</button>
+        <button type="button" class="sponsor-chip" data-brand="FARINELLI" tabindex="-1">Farinelli</button>
+        <button type="button" class="sponsor-chip" data-brand="GALVANOTEK" tabindex="-1">Galvanotek</button>
+      </div>
     </div>
   </div>
 </header>
@@ -7064,8 +7161,35 @@ document.getElementById('catPills').addEventListener('click', e => {
 });
 document.getElementById('brandSelect').addEventListener('change', e => {
   activeBrand = e.target.value;
+  if(typeof syncSponsorChips === 'function') syncSponsorChips();
   renderList(document.getElementById('searchInput').value);
 });
+// Integração dos Patrocinadores no Cabeçalho
+const sponsorsGrid = document.getElementById('sponsorsGrid');
+if(sponsorsGrid){
+  sponsorsGrid.addEventListener('click', e => {
+    const chip = e.target.closest('.sponsor-chip');
+    if(!chip) return;
+    const brand = chip.dataset.brand;
+    const brandSelect = document.getElementById('brandSelect');
+    if(activeBrand === brand){
+      activeBrand = '';
+      if(brandSelect) brandSelect.value = '';
+    } else {
+      activeBrand = brand;
+      if(brandSelect) brandSelect.value = brand;
+    }
+    syncSponsorChips();
+    renderList(document.getElementById('searchInput').value);
+    document.querySelector('.toolbar')?.scrollIntoView({behavior:'smooth', block:'start'});
+  });
+}
+function syncSponsorChips(){
+  document.querySelectorAll('.sponsor-chip').forEach(c => {
+    c.classList.toggle('active', activeBrand && c.dataset.brand === activeBrand);
+  });
+}
+
 document.getElementById('hideOutToggle').addEventListener('change', e => {
   hideOutOfStock = e.target.checked;
   renderList(document.getElementById('searchInput').value);
